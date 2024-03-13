@@ -65,10 +65,14 @@ function displayCart(userId) {
 
             <div class="item-content col overflow-hidden">
               <h2 class="item-title fs-5 mb-2 p-0"><a class="text-reset" href="${item.link}" target="_blank">${item.title}</a></h2>
-              <p class='fw-bold link mb-2 fs-7'>Price: ${item.price}</p>
-              <span>Quantity:</span><input id='quantity2' type="number" value="${item.quantity}" min="1" onchange="updateQuantity('${key}', this)">
               <p class='mb-2'>Post ID: ${item.postId}</p>
-              <button class='btn' onclick="removeFromCart('${key}', '${item.price}')" >Remove from Cart</button>
+              <p class='fw-bold link mb-2 fs-7'>Price: ${item.price}</p>
+              <div class='mb-2'>
+                <button class='btn btn-sm' onclick="decreaseQuantity(this)" data-cart-item-id='${key}'>-</button>
+                <input class='quantity-input btn btn-sm' id='quantity2' type="number" value="${item.quantity}" min="1" onchange="updateQuantity('${key}', this)">
+                <button class='btn btn-sm' onclick="increaseQuantity(this)" data-cart-item-id='${key}'>+</button>
+              </div>
+              <button class='btn' onclick="removeFromCart('${key}', '${item.price}')">Remove from Cart</button>
             </div><br>
           `;
           cartList.appendChild(listItem);
@@ -90,7 +94,9 @@ function displayCart(userId) {
         itemCountSpan.textContent = uniqueItemCount;
 
         // Hide or show the empty cart message based on the cart content
-        emptyCartMessage.style.display = uniqueItemCount === 0 ? 'block' : 'none';
+        if (emptyCartMessage) {
+          emptyCartMessage.style.display = uniqueItemCount === 0 ? 'block' : 'none';
+        }
       } else {
         // Display a message if the cart is empty
         totalPriceDiv.textContent = 'Total Price: $0.00';
@@ -114,7 +120,6 @@ function displayCart(userId) {
     }
   }
 }
-
 
 // Add to Cart Function
 function addToCart(button) {
@@ -202,8 +207,27 @@ function addToCart(button) {
 
 
 
- 
-  // Update Quantity Function
+ // New function to decrease quantity
+function decreaseQuantity(element) {
+  const input = element.nextElementSibling;
+  const cartItemId = input.getAttribute('data-cart-item-id');
+  const currentValue = parseInt(input.value, 10);
+  if (currentValue > 1) {
+    input.value = currentValue - 1;
+    updateQuantity(cartItemId, input);
+  }
+}
+
+// New function to increase quantity
+function increaseQuantity(element) {
+  const input = element.previousElementSibling;
+  const cartItemId = input.getAttribute('data-cart-item-id');
+  const currentValue = parseInt(input.value, 10);
+  input.value = currentValue + 1;
+  updateQuantity(cartItemId, input);
+}
+
+// Updated function to handle both increase and decrease
 function updateQuantity(cartItemId, input) {
   const userId = auth.currentUser.uid;
   const cartRef = database.ref(`users/${userId}/cart/${cartItemId}`);
@@ -211,8 +235,8 @@ function updateQuantity(cartItemId, input) {
   const loadingMessage = document.getElementById('loading-message');
 
   // Show loading message
-  loadingMessage.innerHTML = 'Updating quantity...'; // Add this line
-  loadingMessage.style.display = 'block'; // Add this line
+  loadingMessage.innerHTML = 'Updating quantity...';
+  loadingMessage.style.display = 'block';
 
   // Retrieve the existing cart data from the database
   cartRef.once('value')
@@ -599,7 +623,7 @@ auth.onAuthStateChanged((user) => {
     document.getElementById('user-status').innerHTML = '';
 
      if (profileImageDiv) {
-      profileImageDiv.innerHTML = '<svg class="nav-icon jt-icon fs-5" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+      profileImageDiv.innerHTML = '<svg class="nav-icon jt-icon fs-5" viewBox="0 0 24 24" style="stroke-width: 1.4px; vertical-align: -.5em;"><path d="M20 20v-0a4 4 0 0 0-4-4H8a4 4 0 0 0-4 2v2"></path><circle cx="12" cy="9" r="4"></circle><circle cx="12" cy="12" r="11"></circle></svg>';
     }
     
     // Clear the cart display for the logged-out state
@@ -617,45 +641,150 @@ auth.onAuthStateChanged((user) => {
 
 
 
+// Function to display user Google profile image or a message
+function displayGoogleProfileImage() {
+  const user = auth.currentUser;
+  const profileImageDiv = document.getElementById('google-profile-image');
+
+  // Clear the content of the div
+  profileImageDiv.innerHTML = '';
+
+  // Check if the user is signed in
+  if (user) {
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+    const googleUserInfo = user.providerData.find((userInfo) => userInfo.providerId === googleProvider.providerId);
+
+    // Check if there is an updated profile image in the user object
+    const updatedProfileImage = user.photoURL;
+
+    if (googleUserInfo || updatedProfileImage) {
+      // Create an img element
+      const profileImage = document.createElement('img');
+      profileImage.classList.add('rounded-2');
+
+      // Set the source of the image based on availability
+      profileImage.src = updatedProfileImage || (googleUserInfo ? googleUserInfo.photoURL : '');
+      profileImage.alt = 'Google Profile Image';
+
+      // Append the img element to the div
+      profileImageDiv.appendChild(profileImage);
+    } else {
+      // User is signed in, but there is no Google profile image or updated profile image
+      // Show a placeholder image
+      profileImageDiv.innerHTML = '<svg class="nav-icon jt-icon fs-5" viewBox="0 0 24 24" style="stroke-width: 1.4px; vertical-align: -.5em;"><path d="M20 20v-0a4 4 0 0 0-4-4H8a4 4 0 0 0-4 2v2"></path><circle cx="12" cy="9" r="4"></circle><circle cx="12" cy="12" r="11"></circle></svg>';
+    }
+  } else {
+    // User is signed out or not logged in
+    // Show a message or a placeholder image
+    profileImageDiv.innerHTML = '<svg class="nav-icon jt-icon fs-5" viewBox="0 0 24 24" style="stroke-width: 1.4px; vertical-align: -.5em;"><path d="M20 20v-0a4 4 0 0 0-4-4H8a4 4 0 0 0-4 2v2"></path><circle cx="12" cy="9" r="4"></circle><circle cx="12" cy="12" r="11"></circle></svg>';
+  }
+}
+
+
 // Function to display user profile
 function displayUserProfile(user) {
   const userProfileDiv = document.getElementById('user-profile');
 
   if (user) {
-    let userProfileHTML = '';
-    // Check if the user is Google authenticated
-    const googleProvider = new firebase.auth.GoogleAuthProvider();
-    if (user.providerData.some((userInfo) => userInfo.providerId === googleProvider.providerId)) {
-      const googleUserInfo = user.providerData.find((userInfo) => userInfo.providerId === googleProvider.providerId);
-      userProfileHTML += `<img class="rounded mb-2" src="${googleUserInfo.photoURL}" alt="Profile Image"><br>`;
-    }
-    // Display user information
-    if (user.displayName && user.providerData.some((userInfo) => userInfo.providerId === 'google.com')) {
-      userProfileHTML += `Name: ${user.displayName}<br>`;
-    } else {
-      userProfileHTML += 'To update your profile, please ';
-      userProfileHTML += '<button class="btn mt-4 mb-2" onclick="loginWithGoogle()">Login with Google</button><br>';
-    }
+    // Fetch the user's data from the database
+    const userId = user.uid;
+    const userRef = database.ref(`users/${userId}/profile`);
 
-    userProfileHTML += `Email: ${user.email}<br>`;
-    
-    // Display Edit Profile options
-    userProfileHTML += '<div id="edit-profile-options">';
-    
-    if (user.displayName) {
-      userProfileHTML += '<button class="btn mt-3" onclick="editProfile()">Edit Profile</button><br>';
-    }
+    userRef.once('value')
+      .then(snapshot => {
+        const userProfileData = snapshot.val() || {};
+        user.address = userProfileData.address !== undefined ? userProfileData.address : '';
 
-    userProfileHTML += '</div>';
+        let userProfileHTML = '';
 
-    userProfileDiv.innerHTML = userProfileHTML;
+        // Display user information
+        if (user.displayName && user.providerData.some((userInfo) => userInfo.providerId === 'google.com')) {
+          // User is Google authenticated and has a display name
+        } else {
+          userProfileHTML += 'To Auto update your profile, please <a class="mt-4 mb-4" href="#" onclick="loginWithGoogle()">Login with Google</a><br>';
+          
+        }
+
+        // Check if the user has a custom profile image URL
+        if (user.photoURL) {
+          userProfileHTML += `<img class="rounded mb-2" src="${user.photoURL}" alt="Profile Image"><br>`;
+        } else {
+          // If no custom image, show default Google profile image
+          const googleProvider = new firebase.auth.GoogleAuthProvider();
+          if (user.providerData.some((userInfo) => userInfo.providerId === googleProvider.providerId)) {
+            const googleUserInfo = user.providerData.find((userInfo) => userInfo.providerId === googleProvider.providerId);
+            userProfileHTML += `<img class="rounded mb-2" src="${googleUserInfo.photoURL}" alt="Profile Image"><br>`;
+          }
+        }
+
+        // Display username or "Not provided"
+        const displayedUsername = user.displayName || userProfileData.username || 'Not provided';
+        userProfileHTML += `<strong>Name:</strong> ${displayedUsername}<br>`;
+        userProfileHTML += `<strong>Email:</strong> ${user.email}<br>`;
+        userProfileHTML += `<strong>Address:</strong> ${user.address || 'Not provided'}<br>`;
+
+        // Display Edit Profile options
+        userProfileHTML += '<div id="edit-profile-options">';
+        userProfileHTML += '<button class="btn mt-3" onclick="editProfile()">Edit Profile</button><br>';
+        userProfileHTML += '</div>';
+
+        userProfileDiv.innerHTML = userProfileHTML;
+
+      })
+      .catch(error => {
+        console.error('Error fetching user profile data:', error);
+        // Handle the error as needed
+      });
   } else {
     // User is not logged in
-    userProfileDiv.innerHTML = '<p>You are not logged in currently. Please <a href="login.html">login here</a>!</p>';
+    userProfileDiv.innerHTML = `
+      <p>You are not logged in currently. Please <a href="login.html">login here</a>!</p>
+      <strong>Name:</strong> Guest<br>
+      <div id="edit-profile-options">
+        <button class="btn mt-3" onclick="editProfile()">Edit Profile</button><br>
+      </div>
+    `;
   }
 }
 
 
+// Function to update user profile details
+function updateProfile() {
+  const user = auth.currentUser;
+  const displayName = document.getElementById('displayName').value;
+  const profileImageURL = document.getElementById('profileImage').value;
+  const userAddress = document.getElementById('userAddress').value;
+
+  // Update display name and photoURL
+  user.updateProfile({
+    displayName: displayName,
+    photoURL: profileImageURL
+  })
+  .then(() => {
+    // Save updated user data to the Realtime Database
+    const userId = user.uid;
+    const userRef = database.ref(`users/${userId}/profile`);
+
+    // Update the user's profile details inside the "profile" container
+    userRef.update({
+      displayName: displayName,
+      photoURL: profileImageURL,
+      address: userAddress  // Include the address in the database
+    });
+
+    // Update the address in the user object
+    user.address = userAddress;
+
+    // Display a success message
+    alert('Profile updated successfully.');
+
+    // Optionally, you can also refresh other parts of the user profile display
+    displayUserProfile(user);
+  })
+  .catch((error) => {
+    alert(`Error updating profile: ${error.message}`);
+  });
+}
 
 
 // Function to handle edit profile
@@ -664,14 +793,98 @@ function editProfile() {
 
   const user = auth.currentUser;
   if (user) {
-    // Display options to change password or cancel
-    let editProfileHTML = `<h3>Edit Profile</h3>`;
-    editProfileHTML += `<button class="btn me-2" onclick="changePasswordWithVerification()">Change Password</button>`;
-    editProfileHTML += `<button class="btn" onclick="cancelEdit()">Cancel</button>`;
+    // Display a form for the user to edit profile details
+    let editProfileHTML = `
+      <h3>Edit Profile</h3>
+      <form id="editProfileForm">
+        <label class="fw-5 mb-2" for="displayName">Display Name:</label><br/>
+        <input class="mb-3" type="text" id="displayName" value="${user.displayName || ''}" required><br>
+
+        <label class="fw-5 mb-2" for="profileImage">Profile Image URL:</label><br>
+        <input class="mb-3" type="url" id="profileImage" value="${user.photoURL || ''}"><br>
+        <button type="button" class="btn me-2 mb-4" onclick="updateProfileImage()">Update Image</button>
+        <button type="button" class="btn mb-4" onclick="resetProfileImage()">Reset Image</button><br>
+
+        <label class="fw-5 mb-2" for="userAddress">Address:</label><br>
+        <textarea class="mb-4" id="userAddress">${user.address || ''}</textarea><br>
+
+        <button type="button" class="btn me-2 mb-2" onclick="updateProfile()">Update Profile</button>
+        <button type="button" class="btn me-2 mb-2" onclick="changePasswordWithVerification()">Change Password</button>
+        <button type="button" class="btn mb-2" onclick="cancelEdit()">Back</button>
+      </form>
+    `;
 
     userProfileDiv.innerHTML = editProfileHTML;
   }
 }
+
+// Function to update profile image URL
+function updateProfileImage(callback) {
+  const user = auth.currentUser;
+  const profileImageURL = document.getElementById('profileImage').value;
+
+  // Update profile image URL
+  user.updateProfile({
+    photoURL: profileImageURL
+  })
+  .then(() => {
+    // Display a success message
+    alert('Profile image updated successfully.');
+
+    // Update the displayed profile image immediately
+    displayGoogleProfileImage();
+
+    // Call the callback function to refresh the modal content
+    if (typeof callback === 'function') {
+      callback();
+    }
+  })
+  .catch((error) => {
+    alert(`Error updating profile image: ${error.message}`);
+  });
+}
+
+// Call the updateProfileImage function with the displayGoogleProfileImage callback
+updateProfileImage(displayGoogleProfileImage);
+
+
+// Function to reset profile image to default Google profile image
+function resetProfileImage() {
+  const user = auth.currentUser;
+  const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+  // Check if the user is Google authenticated
+  if (user.providerData.some((userInfo) => userInfo.providerId === googleProvider.providerId)) {
+    // Get the default Google profile image URL
+    const defaultGoogleProfileImageURL = user.providerData.find((userInfo) => userInfo.providerId === googleProvider.providerId)?.photoURL;
+
+    if (defaultGoogleProfileImageURL) {
+      // Reset profile image to the default Google profile image
+      user.updateProfile({
+        photoURL: defaultGoogleProfileImageURL
+      })
+      .then(() => {
+        // Display a success message
+        alert('Profile image reset to default Google profile image.');
+
+        // Update the displayed profile image immediately
+        displayGoogleProfileImage();
+      })
+      .catch((error) => {
+        alert(`Error resetting profile image: ${error.message}`);
+      });
+    } else {
+      // Default Google profile image URL not found
+      alert('Error: Default Google profile image URL not found.');
+    }
+  } else {
+    // User is not Google authenticated
+    alert('Resetting profile image is only available for Google authenticated users.');
+  }
+}
+
+
+
 
 // Function to handle changing password with email verification
 function changePasswordWithVerification() {
@@ -704,41 +917,6 @@ function cancelEdit() {
 }
 
 
-// Function to display user Google profile image or a message
-function displayGoogleProfileImage() {
-  const user = auth.currentUser;
-  const profileImageDiv = document.getElementById('google-profile-image');
-
-  // Clear the content of the div
-  profileImageDiv.innerHTML = '';
-
-  // Check if the user is signed in
-  if (user) {
-    const googleProvider = new firebase.auth.GoogleAuthProvider();
-    const googleUserInfo = user.providerData.find((userInfo) => userInfo.providerId === googleProvider.providerId);
-
-    if (googleUserInfo && googleUserInfo.photoURL) {
-      // User is signed in and has a Google profile image
-      // Create an img element
-      const profileImage = document.createElement('img');
-      profileImage.classList.add('rounded-2');
-      profileImage.src = googleUserInfo.photoURL;
-      profileImage.alt = 'Google Profile Image';
-
-      // Append the img element to the div
-      profileImageDiv.appendChild(profileImage);
-    } else {
-      // User is signed in, but there is no Google profile image
-      // Show a message to log in with Google
-      profileImageDiv.innerHTML = '<svg class="nav-icon jt-icon fs-5" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
-    }
-  } else {
-    // User is signed out or not logged in
-    // Show a message to log in with Google
-   
-  }
-}
-
 
 // Function to open the modal
 function openModal() {
@@ -766,28 +944,24 @@ function updateModalContent() {
     const googleProvider = new firebase.auth.GoogleAuthProvider();
     const googleUserInfo = user.providerData.find((userInfo) => userInfo.providerId === googleProvider.providerId);
 
-    if (googleUserInfo && googleUserInfo.photoURL) {
-      // User is signed in and has a Google profile image
-      // Create an img element
-      const profileImage = document.createElement('img');
-      profileImage.classList.add('rounded', 'mt-3','meta-author');
-      profileImage.src = googleUserInfo.photoURL;
-      profileImage.alt = 'Google Profile Image';
+    // Check if there is an updated profile image in the user object
+    const updatedProfileImage = user.photoURL;
 
-      // Append the img element to the div
-      modalContent.appendChild(profileImage);
+    // Create an img element
+    const profileImage = document.createElement('img');
+    profileImage.classList.add('rounded', 'mt-3', 'meta-author');
 
-      // Display email, "Show Profile" link, and logout button
-      modalContent.innerHTML += `<p class="text-truncate mt-2 mb-0"> ${user.email}</p>`;
-      modalContent.innerHTML += '<a class="fs-7" href="/p/profile.html">Go to Profile</a><br/>';
-      modalContent.innerHTML += '<button class="btn mt-3" onclick="logout()">Logout</button>';
-    } else {
-      // User is signed in, but there is no Google profile image
-      // Display an alternative content
-      modalContent.innerHTML += `<p class="mb-0 text-truncate mt-2">Email:<br/> ${user.email}</p>`;
-      modalContent.innerHTML += '<a class="fs-7" href="/p/profile.html">Go to Profile</a><br/>';
-      modalContent.innerHTML += '<button class="btn mt-3" onclick="logout()">Logout</button>';
-    }
+    // Set the source of the image based on availability
+    profileImage.src = updatedProfileImage || (googleUserInfo && googleUserInfo.photoURL) || 'https://example.com/default-google-profile-image.jpg';
+    profileImage.alt = 'Profile Image';
+
+    // Append the img element to the div
+    modalContent.appendChild(profileImage);
+
+    // Display email, "Show Profile" link, and logout button
+    modalContent.innerHTML += `<p class="text-truncate mt-2 mb-0">${user.email}</p>`;
+    modalContent.innerHTML += '<a class="fs-7" href="/p/profile.html">Go to Profile</a><br/>';
+    modalContent.innerHTML += '<button class="btn mt-3" onclick="logout()">Logout</button>';
   } else {
     // User is not logged in
     // Display a message and a login button
@@ -796,18 +970,6 @@ function updateModalContent() {
   }
 }
 
-// Listen for authentication state changes
-auth.onAuthStateChanged((user) => {
-  // Update modal content when authentication state changes
-  updateModalContent();
-
-  // Close the modal when the user gets logged out
-  if (!user) {
-    closeModal();
-  }
-});
-
-
 
 // Listen for authentication state changes
 auth.onAuthStateChanged((user) => {
@@ -820,3 +982,15 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
+
+
+// Listen for authentication state changes
+auth.onAuthStateChanged((user) => {
+  // Update modal content when authentication state changes
+  updateModalContent();
+
+  // Close the modal when the user gets logged out
+  if (!user) {
+    closeModal();
+  }
+});
