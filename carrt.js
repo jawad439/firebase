@@ -1,6 +1,4 @@
-
-
-    const firebaseConfig = {
+const firebaseConfig = {
       apiKey: "AIzaSyAVuLENG_04wJBnZlX4HFjGyhM-_ThDiLQ",
   authDomain: "ecomerce-edition.firebaseapp.com",
   databaseURL: "https://ecomerce-edition-default-rtdb.firebaseio.com",
