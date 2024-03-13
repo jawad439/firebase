@@ -76,7 +76,7 @@ function displayCart(userId) {
 
         // Hide or show the empty cart message based on the cart content
         if (emptyCartMessage) {
-          emptyCartMessage.style.display = uniqueItemCount === 0 ? 'block' : 'none';
+          
         }
       } else {
         // Display a message if the cart is empty
