@@ -658,7 +658,7 @@ function displayGoogleProfileImage() {
     if (googleUserInfo || updatedProfileImage) {
       // Create an img element
       const profileImage = document.createElement('img');
-      profileImage.classList.add('rounded-2');
+      profileImage.classList.add('rounded-2 border');
 
       // Set the source of the image based on availability
       profileImage.src = updatedProfileImage || (googleUserInfo ? googleUserInfo.photoURL : '');
