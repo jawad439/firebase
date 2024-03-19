@@ -1,4 +1,6 @@
-const firebaseConfig = {
+
+
+    const firebaseConfig = {
       apiKey: "AIzaSyAVuLENG_04wJBnZlX4HFjGyhM-_ThDiLQ",
   authDomain: "ecomerce-edition.firebaseapp.com",
   databaseURL: "https://ecomerce-edition-default-rtdb.firebaseio.com",
@@ -93,7 +95,7 @@ function displayCart(userId) {
 
         // Hide or show the empty cart message based on the cart content
         if (emptyCartMessage) {
-          
+          emptyCartMessage.style.display = uniqueItemCount === 0 ? 'block' : 'none';
         }
       } else {
         // Display a message if the cart is empty
@@ -658,17 +660,13 @@ function displayGoogleProfileImage() {
     if (googleUserInfo || updatedProfileImage) {
       // Create an img element
       const profileImage = document.createElement('img');
-      profileImage.classList.add('rounded-2 border');
-
-      const noti-span = document.createElement('span');
-      profileImage.classList.add('noti-span');
+      profileImage.classList.add('rounded-2');
 
       // Set the source of the image based on availability
       profileImage.src = updatedProfileImage || (googleUserInfo ? googleUserInfo.photoURL : '');
       profileImage.alt = 'Google Profile Image';
 
       // Append the img element to the div
-      profileImageDiv.appendChild(noti-span);
       profileImageDiv.appendChild(profileImage);
     } else {
       // User is signed in, but there is no Google profile image or updated profile image
