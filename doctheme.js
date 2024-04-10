@@ -1012,7 +1012,3 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-}).catch(error => {
-    // Handle error if scripts failed to load
-    console.error('Error loading Firebase scripts:', error);
-});
