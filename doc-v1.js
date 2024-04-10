@@ -15,37 +15,7 @@ Promise.all([
     loadScript('https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js'),
     loadScript('https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js')
 ]).then(() => {
-    // Firebase scripts loaded successfully
-    // Your Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyAVuLENG_04wJBnZlX4HFjGyhM-_ThDiLQ",
-  authDomain: "ecomerce-edition.firebaseapp.com",
-  databaseURL: "https://ecomerce-edition-default-rtdb.firebaseio.com",
-  projectId: "ecomerce-edition",
-  storageBucket: "ecomerce-edition.appspot.com",
-  messagingSenderId: "1019728704903",
-  appId: "1:1019728704903:web:ada69624bd0633b3e30f22",
-  measurementId: "G-JJXFZBDZDQ"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-
-    // Now you can use firebase modules as usual
-    const database = firebase.database();
-    const auth = firebase.auth();
-
-    // Example usage
-    // ...
-}).catch(error => {
-    // Handle error if scripts failed to load
-    console.error('Error loading Firebase scripts:', error);
-});
-
-
-
-
-
+   
 
     const firebaseConfig = {
       apiKey: "AIzaSyAVuLENG_04wJBnZlX4HFjGyhM-_ThDiLQ",
@@ -1040,4 +1010,9 @@ auth.onAuthStateChanged((user) => {
   if (!user) {
     closeModal();
   }
+});
+
+        }).catch(error => {
+    // Handle error if scripts failed to load
+    console.error('Error loading Firebase scripts:', error);
 });
