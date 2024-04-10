@@ -1011,4 +1011,3 @@ auth.onAuthStateChanged((user) => {
     closeModal();
   }
 });
-
