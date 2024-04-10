@@ -1,21 +1,4 @@
-// Create a function to dynamically load scripts
-function loadScript(url) {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = url;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-    });
-}
 
-// Load Firebase scripts
-Promise.all([
-    loadScript('https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js'),
-    loadScript('https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js'),
-    loadScript('https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js')
-]).then(() => {
-   
 
     const firebaseConfig = {
       apiKey: "AIzaSyAVuLENG_04wJBnZlX4HFjGyhM-_ThDiLQ",
@@ -1010,9 +993,4 @@ auth.onAuthStateChanged((user) => {
   if (!user) {
     closeModal();
   }
-});
-
-        }).catch(error => {
-    // Handle error if scripts failed to load
-    console.error('Error loading Firebase scripts:', error);
 });
